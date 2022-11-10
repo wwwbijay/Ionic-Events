@@ -1,0 +1,7 @@
+{
+  "name": "MypayEvents",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
