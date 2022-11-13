@@ -3,40 +3,67 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { Platform } from '@ionic/angular';
-import { BehaviorSubject, from, Observable, of } from 'rxjs';
-import { take, map, switchMap } from 'rxjs/operators';
+import { Storage } from '@ionic/storage';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { IUser } from '../shared/models/IUser';
 
-const helper = new JwtHelperService();
-const TOKEN_KEY = 'jwt-token';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
 
-  baseUrl = environment.baseUrl;
-  public user: Observable<any>;
-  private userData = new BehaviorSubject(null);
+  private mystorage: Storage | null = null;
 
+  userProfile: BehaviorSubject<IUser> = new BehaviorSubject<IUser>({
+    username: '',
+    accessToken: '',
+    tokenType: '',
+    refreshToken: '',
+    expiresIn: '',
+    success: '',
+    message: '',
+    data: '',
+    errors: '',
+  });
+
+  baseUrl: string = environment.baseUrl;
+  jwthelper = new JwtHelperService();
+  tokenExpired: Boolean = false;
+ 
   constructor(
-    private storage: Storage,
-    private http: HttpClient,
-    private plt: Platform,
-    private router: Router
-  ) {
-    this.loadStoredToken();
+    private _http: HttpClient, 
+    private _router: Router,
+    private _plt: Platform,
+    private _storage: Storage
+  ) { }
+
+  async init() {
+    // If using, define drivers here: await this.storage.defineDriver(/*...*/);
+    const storage = await this._storage.create();
+    this.mystorage = storage;
   }
 
-  GetAccessToken() {
-    let user = this.loadStoredToken();
-   // return user.accessToken;
+  login(model: any): Observable<any> {
+    return this._http.post(this.baseUrl + '/api/userauth/token', model);
+  }
+
+  async isLoggedIn() {
+    const user = await this.loadFromLocalStorage();
+    return !this.jwthelper.isTokenExpired(user.accessToken);
+  }
+  
+
+  async GetAccessToken() {
+    let user = await this.loadFromLocalStorage();
+    return user.accessToken;
   }
 
   // TO get refresh token while logging in with user name and password
-  GetRefreshToken() {
-    let user = this.loadStoredToken();
-  //  return user.refreshToken;
+  async GetRefreshToken() {
+    let user = await this.loadFromLocalStorage();
+    return user.refreshToken;
   }
 
   // To generate the refresh token
@@ -46,17 +73,17 @@ export class AuthService {
       source: 'web',
       refreshToken: token,
     };
-    return this.http.post(this.baseUrl + '/api/userauth/token', input);
+    return this._http.post(this.baseUrl + '/api/userauth/token', input);
   }
 
   handleRefreshToken() {
     let token = this.GetRefreshToken();
     this.GenerateRefreshToken(token).subscribe({
-      next: (data: any) => {
-        let user = this.loadStoredToken();
-     //   user.accessToken = data.accessToken;
-    //    user.refreshToken = data.refreshToken;
-      //  this.saveToLocalStorage(user);
+      next: async (data: any) => {
+        let user = await this.loadFromLocalStorage();
+        user.accessToken = data.accessToken;
+        user.refreshToken = data.refreshToken;
+        this.saveToLocalStorage(await user);
       },
       error: (err:any) => {
         console.log(err);
@@ -65,58 +92,38 @@ export class AuthService {
     });
   }
 
-  loadStoredToken() {
-    let platformObs = from(this.plt.ready());
-
-    this.user = platformObs.pipe(
-      switchMap(() => {
-        return from(this.storage.get(TOKEN_KEY));
-      }),
-      map((token:any) => {
-        if (token) {
-          let decoded = helper.decodeToken(token);
-          this.userData.next(decoded);
-          return true;
-        } else {
-          return null;
-        }
-      })
-    );
+  async saveToLocalStorage(user: IUser) {
+    this.userProfile.next(user);
+    await this._storage.set('प्रशासकप्रोफाइल', JSON.stringify(user));
   }
 
-  login(credentials: { email: string; pw: string }) {
-    // Normally make a POST request to your APi with your login credentials
-    if (
-      credentials.email != 'saimon@devdactic.com' ||
-      credentials.pw != '123'
-    ) {
-      return of(null);
+  async loadFromLocalStorage(): Promise<IUser> {
+    if (!this.userProfile.value.accessToken) {
+      let fromStorage = this._storage.get('प्रशासकप्रोफाइल');
+      
+      if (!!fromStorage) {
+        let userInfo = JSON.parse(await fromStorage);
+        this.userProfile.next(userInfo);
+      }
     }
-
-    return this.http.get('https://randomuser.me/api/').pipe(
-      take(1),
-      map((res) => {
-        // Extract the JWT, here we just fake it
-        return `eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1Njc2NjU3MDYsImV4cCI6MTU5OTIwMTcwNiwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoiMTIzNDUiLCJmaXJzdF9uYW1lIjoiU2ltb24iLCJsYXN0X25hbWUiOiJHcmltbSIsImVtYWlsIjoic2FpbW9uQGRldmRhY3RpYy5jb20ifQ.4LZTaUxsX2oXpWN6nrSScFXeBNZVEyuPxcOkbbDVZ5U`;
-      }),
-      switchMap((token) => {
-        let decoded = helper.decodeToken(token);
-        this.userData.next(decoded);
-
-        let storageObs = from(this.storage.set(TOKEN_KEY, token));
-        return storageObs;
-      })
-    );
+    return this.userProfile.value;
   }
 
-  getUser() {
-    return this.userData.getValue();
-  }
+  async logout() {
+    await this._storage.remove('प्रशासकप्रोफाइल');
 
-  logout() {
-    this.storage.remove(TOKEN_KEY).then(() => {
-      this.router.navigateByUrl('/');
-      this.userData.next(null);
+    this.userProfile.next({
+      username: '',
+      accessToken: '',
+      tokenType: '',
+      refreshToken: '',
+      expiresIn: '',
+      success: '',
+      message: '',
+      data: '',
+      errors: '',
     });
+    this._router.navigate(['']);
+
   }
 }

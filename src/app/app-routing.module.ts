@@ -14,9 +14,10 @@ const routes: Routes = [
     loadChildren: () => import('./screens/login/login.module').then( m => m.LoginPageModule)
   },
   {
-    path: 'home',
-    loadChildren: () => import('./screens/home/home.module').then( m => m.HomePageModule)
-  }
+    path: '**',
+    pathMatch: 'full',
+    redirectTo: 'events',
+  },
 ];
 
 @NgModule({
