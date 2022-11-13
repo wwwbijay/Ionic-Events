@@ -37,10 +37,11 @@ export class AuthService {
     private _router: Router,
     private _plt: Platform,
     private _storage: Storage
-  ) { }
+  ) { 
+    this.ngOnInit();
+  }
 
-  async init() {
-    // If using, define drivers here: await this.storage.defineDriver(/*...*/);
+  async ngOnInit() {
     const storage = await this._storage.create();
     this.mystorage = storage;
   }
@@ -93,6 +94,7 @@ export class AuthService {
   }
 
   async saveToLocalStorage(user: IUser) {
+   
     this.userProfile.next(user);
     await this._storage.set('प्रशासकप्रोफाइल', JSON.stringify(user));
   }
@@ -102,6 +104,7 @@ export class AuthService {
       let fromStorage = this._storage.get('प्रशासकप्रोफाइल');
       
       if (!!fromStorage) {
+       
         let userInfo = JSON.parse(await fromStorage);
         this.userProfile.next(userInfo);
       }
@@ -110,6 +113,7 @@ export class AuthService {
   }
 
   async logout() {
+   
     await this._storage.remove('प्रशासकप्रोफाइल');
 
     this.userProfile.next({

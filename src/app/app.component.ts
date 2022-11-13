@@ -8,12 +8,12 @@ import { SplashScreen } from '@capacitor/splash-screen';
 })
 export class AppComponent {
   public appPages = [
-    { title: 'Inbox', url: '/folder/Inbox', icon: 'mail' },
-    { title: 'Outbox', url: '/folder/Outbox', icon: 'paper-plane' },
-    { title: 'Favorites', url: '/folder/Favorites', icon: 'heart' },
-    { title: 'Archived', url: '/folder/Archived', icon: 'archive' },
-    { title: 'Trash', url: '/folder/Trash', icon: 'trash' },
-    { title: 'Spam', url: '/folder/Spam', icon: 'warning' },
+    { title: 'Inbox', url: '/events/Inbox', icon: 'mail' },
+    { title: 'Outbox', url: '/events/Outbox', icon: 'paper-plane' },
+    { title: 'Favorites', url: '/events/Favorites', icon: 'heart' },
+    { title: 'Archived', url: '/events/Archived', icon: 'archive' },
+    { title: 'Trash', url: '/events/Trash', icon: 'trash' },
+    { title: 'Spam', url: '/events/Spam', icon: 'warning' },
   ];
   public labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
   constructor() {

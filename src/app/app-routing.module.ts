@@ -18,6 +18,14 @@ const routes: Routes = [
     pathMatch: 'full',
     redirectTo: 'events',
   },
+  {
+    path: 'event',
+    loadChildren: () => import('./screens/event/event.module').then( m => m.EventPageModule)
+  },
+  {
+    path: 'qr-scan',
+    loadChildren: () => import('./screens/qr-scan/qr-scan.module').then( m => m.QrScanPageModule)
+  },
 ];
 
 @NgModule({
