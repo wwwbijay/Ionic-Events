@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
+import { BarcodeScanner, SupportedFormat } from '@capacitor-community/barcode-scanner';
 
 @Component({
   selector: 'app-folder',
@@ -40,17 +40,22 @@ export class FolderPage implements OnInit {
       this.scanActive = true;
       BarcodeScanner.hideBackground();
 
-      const result = await BarcodeScanner.startScan();
+      const result = await BarcodeScanner.startScan({ targetedFormats: [SupportedFormat.QR_CODE] });
 
       if (result.hasContent) {
         this.scanActive = false;
         alert(result.content); //The QR content will come out here
+        console.log(result.content);
         //Handle the data as your heart desires here
       } else {
         alert('NO DATA FOUND!');
       }
     } else {
-      alert('NOT ALLOWED!');
+      // redirect user to app settings if they want to grant it anyway
+      const c = confirm('If you want to grant permission for using your camera, enable it in the app settings.');
+      if (c) {
+        BarcodeScanner.openAppSettings();
+      }
     }
   }
 

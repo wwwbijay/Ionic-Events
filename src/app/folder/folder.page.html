@@ -1,9 +1,13 @@
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" [style.--background]="scanActive?'#00000000':'#ffffff'">
   <router-outlet></router-outlet>
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end" (click)="startScanner()" >
-    <ion-fab-button>
+  <div class="scan-box" [hidden]="!scanActive"></div>
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button *ngIf="!scanActive"  (click)="startScanner()" >
         <ion-icon name="qr-code-outline"></ion-icon>
-    </ion-fab-button>
-   
+    </ion-fab-button> 
+
+    <ion-fab-button *ngIf="scanActive"  (click)="stopScanner()" >
+      <ion-icon name="close-outline"></ion-icon>
+    </ion-fab-button> 
   </ion-fab>
 </ion-content>

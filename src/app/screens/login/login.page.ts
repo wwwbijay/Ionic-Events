@@ -26,7 +26,9 @@ export class LoginPage implements OnInit {
     this._menu.enable(false);
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    
+  }
   
 
   loginForm = new FormGroup({
@@ -81,8 +83,8 @@ export class LoginPage implements OnInit {
           this.loading = false;
           this.submitted = true;
           console.log(err);
-          this.login_error = err.error.errors[0];
-          console.log(this.login_error);
+          // this.login_error = err?.error?.errors;
+
         }
       });
 
